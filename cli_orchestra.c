@@ -95,7 +95,15 @@ void contador_tiempo_entre_comandos(float *array_tiempos, int num_comandos, cons
 		}
 		else
 		{
-			array_tiempos[i - 1] = difftime(t2, t1);
+			if (difftime(t2,t1) >= 60)
+			{
+				if (difftime(t2,t1) >= 3600)
+					array_tiempos[i-1] = difftime(t2, t1) / 3600;
+				else
+					array_tiempos[i-1] = difftime(t2, t1) / 60;
+			}
+			else
+				array_tiempos[i - 1] = difftime(t2, t1);
 		}
 	}
 }
