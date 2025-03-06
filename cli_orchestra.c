@@ -2,9 +2,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+
 
 #define HISTORY_FILE_DATE "/home/tello/.zsh_history_date"
 #define MAX_LONGITUD 500
+// Definición de una nota musical
+typedef struct {
+    char *nombre;
+    double frecuencia;
+} Nota;
+
+// Escala de Do mayor con sus frecuencias (Hz)
+Nota escala[] = {
+    {"C", 261.63},
+    {"D", 293.66},
+    {"E", 329.63},
+    {"F", 349.23},
+    {"G", 392.00},
+    {"A", 440.00},
+    {"B", 493.88}
+};
+
+#define NUM_NOTAS (sizeof(escala)/sizeof(escala[0]))
+
 
 // Función para obtener la fecha actual en formato YYYY-MM-DD
 void obtener_fecha_actual(char *fecha_actual)
@@ -83,7 +104,7 @@ time_t obtener_timestamp(const char *linea)
 }
 
 // Función para calcular la diferencia de tiempo entre comandos
-void contador_tiempo_entre_comandos(float *array_tiempos, int num_comandos, const char array_comandos[num_comandos][MAX_LONGITUD])
+void contador_tiempo_entre_comandos(double *array_tiempos, int num_comandos, const char array_comandos[num_comandos][MAX_LONGITUD])
 {
 	for (int i = 1; i < num_comandos; i++)
 	{
@@ -95,16 +116,28 @@ void contador_tiempo_entre_comandos(float *array_tiempos, int num_comandos, cons
 		}
 		else
 		{
-			if (difftime(t2,t1) >= 60)
+			if (difftime(t2,t1) >= 10)
 			{
-				if (difftime(t2,t1) >= 3600)
-					array_tiempos[i-1] = difftime(t2, t1) / 3600;
+				if (difftime(t2,t1) >= 100)
+
+					if (difftime(t2,t1) >= 1000)
+						if (difftime(t2,t1) >= 10000)
+							array_tiempos[i-1] = difftime(t2, t1)*0.0001;
+						else
+							array_tiempos[i-1] = difftime(t2, t1)*0.001;
+					else
+						array_tiempos[i-1] = difftime(t2, t1)*0.01;
 				else
-					array_tiempos[i-1] = difftime(t2, t1) / 60;
+					array_tiempos[i-1] = difftime(t2,t1)*0.1;
 			}
 			else
 				array_tiempos[i - 1] = difftime(t2, t1);
 		}
+	}
+
+	for (int i=1; i<num_comandos; i++)
+	{
+		array_tiempos[i] = array_tiempos[i] / 2.0;
 	}
 }
 
@@ -124,8 +157,45 @@ int main()
 	int num_comandos = 0;
 	obtener_comandos(fecha_actual, MAX_COMANDOS, array_comandos, &num_comandos);
 
-	float array_tiempos[num_comandos - 1];
+	double array_tiempos[num_comandos - 1];
 	contador_tiempo_entre_comandos(array_tiempos, num_comandos, array_comandos);
+
+
+
+	// Simulación de intervalos de tiempo (en segundos) obtenidos del historial de comandos
+	int numIntervalos = sizeof(array_tiempos) / sizeof(array_tiempos[0]);
+
+	// Inicializa la semilla para números aleatorios
+	srand(time(NULL));
+
+	printf("Generando melodía basada en intervalos de comandos:\n");
+
+	for (int i = 0; i < numIntervalos; i++) {
+		// Selecciona una nota aleatoria de la escala
+		int indice = rand() % NUM_NOTAS;
+		Nota nota = escala[indice];
+
+		// Mapea el intervalo al tiempo de duración de la nota
+		double duracion = array_tiempos[i];
+
+		// Construye el comando para reproducir la nota con SoX.
+		// Ejemplo: play -n synth 0.5 sine 261.63
+		char comando[256];
+		sprintf(comando, "play -n synth %f sine %f", duracion, nota.frecuencia);
+		printf("Reproduciendo nota %s con duración %f s: %s\n", nota.nombre, duracion, comando);
+
+		// Ejecuta el comando para reproducir la nota
+		system(comando);
+
+		// Se podría agregar una pausa corta entre notas, si se desea
+		// usleep(100000); // 100 ms
+	}
+
+
+
+
+
+
 
 	printf("\nDiferencias de tiempo entre comandos de hoy:\n");
 	for (int i = 0; i < num_comandos - 1; i++)
@@ -136,7 +206,7 @@ int main()
 		}
 		else
 		{
-			printf("%.0f, ", array_tiempos[i]);
+			printf("%f, ", array_tiempos[i]);
 		}
 	}
 
