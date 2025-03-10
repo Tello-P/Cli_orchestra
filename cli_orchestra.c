@@ -161,42 +161,6 @@ int main()
 	contador_tiempo_entre_comandos(array_tiempos, num_comandos, array_comandos);
 
 
-
-	// Simulación de intervalos de tiempo (en segundos) obtenidos del historial de comandos
-	int numIntervalos = sizeof(array_tiempos) / sizeof(array_tiempos[0]);
-
-	// Inicializa la semilla para números aleatorios
-	srand(time(NULL));
-
-	printf("Generando melodía basada en intervalos de comandos:\n");
-
-	for (int i = 0; i < numIntervalos; i++) {
-		// Selecciona una nota aleatoria de la escala
-		int indice = rand() % NUM_NOTAS;
-		Nota nota = escala[indice];
-
-		// Mapea el intervalo al tiempo de duración de la nota
-		double duracion = array_tiempos[i];
-
-		// Construye el comando para reproducir la nota con SoX.
-		// Ejemplo: play -n synth 0.5 sine 261.63
-		char comando[256];
-		sprintf(comando, "play -n synth %f sine %f", duracion, nota.frecuencia);
-		printf("Reproduciendo nota %s con duración %f s: %s\n", nota.nombre, duracion, comando);
-
-		// Ejecuta el comando para reproducir la nota
-		system(comando);
-
-		// Se podría agregar una pausa corta entre notas, si se desea
-		// usleep(100000); // 100 ms
-	}
-
-
-
-
-
-
-
 	printf("\nDiferencias de tiempo entre comandos de hoy:\n");
 	for (int i = 0; i < num_comandos - 1; i++)
 	{
